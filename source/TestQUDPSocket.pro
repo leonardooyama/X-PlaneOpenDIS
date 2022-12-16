@@ -25,7 +25,7 @@ win32 {
     TARGET = OpenDIS_XPlane
     TARGET_EXT = .xpl
     TARGET_CUSTOM_EXT = .xpl
-    PLUGIN_FINAL_DIR = $$shell_quote($$shell_path("C:/X-Plane 11/Resources/plugins/OpenDIS_XPlane/win_x64"))
+    PLUGIN_FINAL_DIR = $$shell_quote($$shell_path("D:/X-Plane 11/Resources/plugins/OpenDIS_XPlane/win_x64"))
 }
 
 INCLUDEPATH += $$PWD/../DIS
