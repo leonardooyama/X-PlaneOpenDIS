@@ -1,0 +1,15 @@
+prefix=${pcfiledir}/../..
+
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/../include
+bindir=${exec_prefix}/OFF
+
+Name: GeographicLib
+Description: A library for geographic projections
+Version: 2.1.2
+URL: https://geographiclib.sourceforge.io
+
+Requires:
+Libs: -L"${libdir}" -lGeographicLib
+Cflags: -I"${includedir}"

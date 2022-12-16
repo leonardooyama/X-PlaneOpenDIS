@@ -1,0 +1,4 @@
+The package geographiclib:x64-windows provides CMake targets:
+
+    find_package (GeographicLib CONFIG REQUIRED)
+    target_link_libraries (main PRIVATE ${GeographicLib_LIBRARIES})

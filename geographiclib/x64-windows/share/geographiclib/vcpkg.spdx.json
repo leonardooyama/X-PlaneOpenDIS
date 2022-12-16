@@ -1,0 +1,138 @@
+{
+  "$schema": "https://raw.githubusercontent.com/spdx/spdx-spec/v2.2.1/schemas/spdx-schema.json",
+  "spdxVersion": "SPDX-2.2",
+  "dataLicense": "CC0-1.0",
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "documentNamespace": "https://spdx.org/spdxdocs/geographiclib-x64-windows-2.1.2-1ad42f8c-e8a4-4d9a-876d-3bad879197ad",
+  "name": "geographiclib:x64-windows@2.1.2 44b4c8ad447cf5964e3d1aae6c1f34f4b15e5bf21f68c5f330ee4c53abe6dc95",
+  "creationInfo": {
+    "creators": [
+      "Tool: vcpkg-5fdee72bc1fceca198fb1ab7589837206a8b81ba"
+    ],
+    "created": "2022-12-16T00:10:21Z"
+  },
+  "relationships": [
+    {
+      "spdxElementId": "SPDXRef-port",
+      "relationshipType": "GENERATES",
+      "relatedSpdxElement": "SPDXRef-binary"
+    },
+    {
+      "spdxElementId": "SPDXRef-port",
+      "relationshipType": "CONTAINS",
+      "relatedSpdxElement": "SPDXRef-file-0"
+    },
+    {
+      "spdxElementId": "SPDXRef-port",
+      "relationshipType": "CONTAINS",
+      "relatedSpdxElement": "SPDXRef-file-1"
+    },
+    {
+      "spdxElementId": "SPDXRef-port",
+      "relationshipType": "CONTAINS",
+      "relatedSpdxElement": "SPDXRef-file-2"
+    },
+    {
+      "spdxElementId": "SPDXRef-binary",
+      "relationshipType": "GENERATED_FROM",
+      "relatedSpdxElement": "SPDXRef-port"
+    },
+    {
+      "spdxElementId": "SPDXRef-file-0",
+      "relationshipType": "CONTAINED_BY",
+      "relatedSpdxElement": "SPDXRef-port"
+    },
+    {
+      "spdxElementId": "SPDXRef-file-1",
+      "relationshipType": "CONTAINED_BY",
+      "relatedSpdxElement": "SPDXRef-port"
+    },
+    {
+      "spdxElementId": "SPDXRef-file-2",
+      "relationshipType": "CONTAINED_BY",
+      "relatedSpdxElement": "SPDXRef-port"
+    },
+    {
+      "spdxElementId": "SPDXRef-file-2",
+      "relationshipType": "DEPENDENCY_MANIFEST_OF",
+      "relatedSpdxElement": "SPDXRef-port"
+    }
+  ],
+  "packages": [
+    {
+      "name": "geographiclib",
+      "SPDXID": "SPDXRef-port",
+      "versionInfo": "2.1.2",
+      "downloadLocation": "git+https://github.com/Microsoft/vcpkg#ports/geographiclib",
+      "homepage": "https://geographiclib.sourceforge.io",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "description": "GeographicLib, a C++ library for performing geographic conversions",
+      "comment": "This is the port (recipe) consumed by vcpkg."
+    },
+    {
+      "name": "geographiclib:x64-windows",
+      "SPDXID": "SPDXRef-binary",
+      "versionInfo": "44b4c8ad447cf5964e3d1aae6c1f34f4b15e5bf21f68c5f330ee4c53abe6dc95",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "comment": "This is a binary package built by vcpkg."
+    },
+    {
+      "SPDXID": "SPDXRef-resource-1",
+      "name": "GeographicLib-2.1.2.tar.gz",
+      "packageFileName": "GeographicLib-2.1.2.tar.gz",
+      "downloadLocation": "https://sourceforge.net/projects/geographiclib/files/distrib-C++/GeographicLib-2.1.2.tar.gz",
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "checksums": [
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "0f43657af93028f62f934a6290d17245d2ac5308753ed33de87e2e5da39793a28e04c40897eee34cc3786eb82dcbb49b5fcf5c21214b1e5519e5f14fab34382f"
+        }
+      ]
+    }
+  ],
+  "files": [
+    {
+      "fileName": "./portfile.cmake",
+      "SPDXID": "SPDXRef-file-0",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "abc24eb2456ea76ee6d34337d05aa1427a90db0b614cf30da480012a37507e2b"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./usage",
+      "SPDXID": "SPDXRef-file-1",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "2416ee672448e701d88347818215c409607ed91a9fe522b95e0ac08e4f823f31"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./vcpkg.json",
+      "SPDXID": "SPDXRef-file-2",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "6a459b1ea13371c86a42faebfb178cefe59e5e7676f7207f8fea8635341786f9"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "copyrightText": "NOASSERTION"
+    }
+  ]
+}
