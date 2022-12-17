@@ -68,8 +68,6 @@ enum DeadReckoningModel
 };
 
 
-XPLMDataRef DataRefFlightModelLatRef;
-XPLMDataRef DataRefFlightModelLonRef;
 XPLMDataRef DataRefFlightModelLat;
 XPLMDataRef DataRefFlightModelLon;
 XPLMDataRef DataRefFlightModelElev;
@@ -84,7 +82,6 @@ XPLMDataRef DataRefFlightModelLocalAx;
 XPLMDataRef DataRefFlightModelLocalAy;
 XPLMDataRef DataRefFlightModelLocalAz;
 
-double flightModelLatRefOld, flightModelLonRefOld, flightModelLatRefCurrent, flightModelLonRefCurrent;
 double flightModelLat, flightModelLon, flightModelElev;
 float flightModelTrueTheta, flightModelTruePhi, flightModelTruePsi, flightModelMagPsi;
 float flightModelLocalVx, flightModelLocalVy, flightModelLocalVz;
@@ -96,6 +93,7 @@ float FlightLoopSendUDPDatagram(float inElapsedSinceLastCall, float inElapsedTim
 
 double latOGLX, lonOGLX, elevOGLX, latOGLY, lonOGLY, elevOGLY, latOGLZ, lonOGLZ, elevOGLZ;
 double latOGL_zero, lonOGL_zero, elevOGL_zero;
+double latOGL_zero_old, lonOGL_zero_old, elevOGL_zero_old;
 double geocentricOGL_zeroX, geocentricOGL_zeroY, geocentricOGL_zeroZ;
 double geocentricOGLXX, geocentricOGLXY, geocentricOGLXZ, geocentricOGLYX, geocentricOGLYY, geocentricOGLYZ, geocentricOGLZX, geocentricOGLZY, geocentricOGLZZ;
 void updateCanonicConversionVectors();
@@ -137,8 +135,6 @@ PLUGIN_API int XPluginStart(
 
     XPLMRegisterFlightLoopCallback(FlightLoopSendUDPDatagram, xplm_FlightLoop_Phase_AfterFlightModel, NULL);
 
-    DataRefFlightModelLatRef = XPLMFindDataRef("sim/flightmodel/position/lat_ref");;
-    DataRefFlightModelLonRef = XPLMFindDataRef("sim/flightmodel/position/lon_ref");;
     DataRefFlightModelLat = XPLMFindDataRef("sim/flightmodel/position/latitude");
     DataRefFlightModelLon = XPLMFindDataRef("sim/flightmodel/position/longitude");
     DataRefFlightModelElev = XPLMFindDataRef("sim/flightmodel/position/elevation");
@@ -153,10 +149,6 @@ PLUGIN_API int XPluginStart(
     DataRefFlightModelLocalAy = XPLMFindDataRef("sim/flightmodel/position/local_ay");
     DataRefFlightModelLocalAz = XPLMFindDataRef("sim/flightmodel/position/local_az");
 
-    flightModelLatRefOld = -1;
-    flightModelLatRefCurrent = 0;
-    flightModelLonRefOld = -1;
-    flightModelLonRefCurrent = 0;
     return 1;
 }
 
@@ -184,14 +176,7 @@ PLUGIN_API void XPluginReceiveMessage(
 
 float FlightLoopSendUDPDatagram(float inElapsedSinceLastCall, float inElapsedTimeSinceLastFlightLoop, int inCounter, void *inRefcon)
 {
-    flightModelLatRefOld = flightModelLatRefCurrent;
-    flightModelLatRefCurrent = XPLMGetDatad(DataRefFlightModelLatRef);
-    flightModelLonRefOld = flightModelLonRefCurrent;
-    flightModelLonRefCurrent = XPLMGetDatad(DataRefFlightModelLonRef);
-    if (flightModelLatRefOld != flightModelLatRefCurrent || flightModelLonRefOld != flightModelLonRefCurrent)
-    {
-        updateCanonicConversionVectors();
-    }
+    updateCanonicConversionVectors();
 
     // update flight model variables with current data
     flightModelLat = XPLMGetDatad(DataRefFlightModelLat);
@@ -266,24 +251,15 @@ float FlightLoopSendUDPDatagram(float inElapsedSinceLastCall, float inElapsedTim
     linVel_OGL.push_back(flightModelLocalVx);
     linVel_OGL.push_back(flightModelLocalVy);
     linVel_OGL.push_back(flightModelLocalVz);
-    debugStr.clear();
-    debugStr+= "flightModelLocalV = ";
-    debugStr+= QString::number(flightModelLocalVx, 'f', 6) + " ";
-    debugStr+= QString::number(flightModelLocalVy, 'f', 6) + " ";
-    debugStr+= QString::number(flightModelLocalVz, 'f', 6) + "\n";
-    XPLMDebugString(debugStr.toStdString().c_str());
-    socketUDP.writeDatagram(debugStr.toUtf8(), QHostAddress::Broadcast, 10000);
+
+
+
     linVel_Geocentric  = convertOGL2Geocentric(linVel_OGL);
     linearVelocity.setX(linVel_Geocentric[0]);
     linearVelocity.setY(linVel_Geocentric[1]);
     linearVelocity.setZ(linVel_Geocentric[2]);
-    debugStr.clear();
-    debugStr+= "linVel_Geocentric = ";
-    debugStr+= QString::number(linearVelocity.getX(), 'f', 6) + " ";
-    debugStr+= QString::number(linearVelocity.getY(), 'f', 6) + " ";
-    debugStr+= QString::number(linearVelocity.getZ(), 'f', 6) + "\n";
-    XPLMDebugString(debugStr.toStdString().c_str());
-    socketUDP.writeDatagram(debugStr.toUtf8(), QHostAddress::Broadcast, 10000);
+
+
     friendly.setEntityLinearVelocity(linearVelocity);
 
     // Dead Reckoning
@@ -315,19 +291,28 @@ float FlightLoopSendUDPDatagram(float inElapsedSinceLastCall, float inElapsedTim
     dataToSend.clear();
     buffer.clear();
 
-    // return in 10 flight loops
-    //return -10.0;
-    // return in 1 second
-    return 1.0;
+    //return -10.0; // return in 10 flight loops
+
+    return 1.0; // return in 1 second
 }
 
 void updateCanonicConversionVectors()
 {
+    latOGL_zero_old = latOGL_zero;
+    lonOGL_zero_old = lonOGL_zero;
+    elevOGL_zero_old = elevOGL_zero;
     XPLMLocalToWorld(0,0,0, &latOGL_zero, &lonOGL_zero, &elevOGL_zero);
+    if (latOGL_zero == latOGL_zero_old && lonOGL_zero == lonOGL_zero_old && elevOGL_zero == elevOGL_zero_old)
+    {
+        debugStr.clear();
+        debugStr+= "The origin of the OGL coordinates has not changed. Update is not necessary.";
+        socketUDP.writeDatagram(debugStr.toUtf8(), QHostAddress::Broadcast, 10000);
+        return;
+    }
+
     XPLMLocalToWorld(1,0,0, &latOGLX, &lonOGLX, &elevOGLX);
     XPLMLocalToWorld(0,1,0, &latOGLY, &lonOGLY, &elevOGLY);
     XPLMLocalToWorld(0,0,1, &latOGLZ, &lonOGLZ, &elevOGLZ);
-
 
     GeographicLib::Geocentric earth(GeographicLib::Constants::WGS84_a(), GeographicLib::Constants::WGS84_f());
     earth.Forward(latOGL_zero, lonOGL_zero, elevOGL_zero, geocentricOGL_zeroX, geocentricOGL_zeroY, geocentricOGL_zeroZ);
@@ -343,6 +328,7 @@ void updateCanonicConversionVectors()
     geocentricOGLZX = geocentricOGLZX - geocentricOGL_zeroX;
     geocentricOGLZY = geocentricOGLZY - geocentricOGL_zeroY;
     geocentricOGLZZ = geocentricOGLZZ - geocentricOGL_zeroZ;
+
     debugStr.clear();
     debugStr+= "matrix = ";
     debugStr+= QString::number(geocentricOGLXX, 'f', 6) + " ";
@@ -359,7 +345,7 @@ void updateCanonicConversionVectors()
 
 QVector<double> convertOGL2Geocentric(QVector<double> OGLVector)
 {
-    updateCanonicConversionVectors();
+    //updateCanonicConversionVectors();
     QVector<double> converted;
     double x ,y, z;
     if (OGLVector.size() !=3)
@@ -370,34 +356,11 @@ QVector<double> convertOGL2Geocentric(QVector<double> OGLVector)
         converted.push_back(x);
         converted.push_back(y);
         converted.push_back(z);
-        debugStr.clear();
-        debugStr+= "Error!! Convert algorithm";
-        socketUDP.writeDatagram(debugStr.toUtf8(), QHostAddress::Broadcast, 10000);
         return converted;
     }
     x = OGLVector[0]* geocentricOGLXX + OGLVector[1]* geocentricOGLXY + OGLVector[2]* geocentricOGLXZ;
     y = OGLVector[0]* geocentricOGLYX + OGLVector[1]* geocentricOGLYY + OGLVector[2]* geocentricOGLYZ;
     z = OGLVector[0]* geocentricOGLZX + OGLVector[1]* geocentricOGLZY + OGLVector[2]* geocentricOGLZZ;
-
-    debugStr.clear();
-    debugStr+= "matrix = ";
-    debugStr+= QString::number(geocentricOGLXX, 'f', 6) + " ";
-    debugStr+= QString::number(geocentricOGLXY, 'f', 6) + " ";
-    debugStr+= QString::number(geocentricOGLXZ, 'f', 6) + "\n";
-    debugStr+= QString::number(geocentricOGLYX, 'f', 6) + " ";
-    debugStr+= QString::number(geocentricOGLYY, 'f', 6) + " ";
-    debugStr+= QString::number(geocentricOGLYZ, 'f', 6) + "\n";
-    debugStr+= QString::number(geocentricOGLZX, 'f', 6) + " ";
-    debugStr+= QString::number(geocentricOGLZY, 'f', 6) + " ";
-    debugStr+= QString::number(geocentricOGLZZ, 'f', 6) + "\n";
-    socketUDP.writeDatagram(debugStr.toUtf8(), QHostAddress::Broadcast, 10000);
-
-    debugStr.clear();
-    debugStr+= "convertedVector = ";
-    debugStr+= QString::number(x, 'f', 6) + " ";
-    debugStr+= QString::number(y, 'f', 6) + " ";
-    debugStr+= QString::number(z, 'f', 6) + "\n";
-    socketUDP.writeDatagram(debugStr.toUtf8(), QHostAddress::Broadcast, 10000);
 
     converted.push_back(x);
     converted.push_back(y);

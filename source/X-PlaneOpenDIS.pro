@@ -25,7 +25,7 @@ win32 {
     TARGET = OpenDIS_XPlane
     TARGET_EXT = .xpl
     TARGET_CUSTOM_EXT = .xpl
-    PLUGIN_FINAL_DIR = $$shell_quote($$shell_path("D:/X-Plane 11/Resources/plugins/OpenDIS_XPlane/win_x64"))
+    PLUGIN_FINAL_DIR = $$shell_quote($$shell_path("C:/X-Plane 11/Resources/plugins/OpenDIS_XPlane/win_x64"))
 }
 
 INCLUDEPATH += $$PWD/../DIS
@@ -67,7 +67,7 @@ QMAKE_POST_LINK = $${DEPLOY_COMMAND} $${DEPLOY_TARGET} --no-translations $$escap
 win32 {
     QMAKE_POST_LINK += copy $${DIS_BIN}\*.dll $${DEPLOY_FOLDER} $$escape_expand(\n\t)
     QMAKE_POST_LINK += copy $${GEOGRAPHICLIB_BIN}\*.dll $${DEPLOY_FOLDER} $$escape_expand(\n\t)
-    QMAKE_POST_LINK += if exist $${PLUGIN_FINAL_DIR} del /S/Q $${PLUGIN_FINAL_DIR}  $$escape_expand(\n\t)
+    QMAKE_POST_LINK += if exist $${PLUGIN_FINAL_DIR} del /S/Q $${PLUGIN_FINAL_DIR}\*  $$escape_expand(\n\t)
     QMAKE_POST_LINK += xcopy $${DEPLOY_FOLDER} $${PLUGIN_FINAL_DIR}\ /E/C $$escape_expand(\n\t)
     QMAKE_POST_LINK += del /S/Q $${PLUGIN_FINAL_DIR}\*.exp  $$escape_expand(\n\t)
     QMAKE_POST_LINK += del /S/Q $${PLUGIN_FINAL_DIR}\*.ilk  $$escape_expand(\n\t)
