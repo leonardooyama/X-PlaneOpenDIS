@@ -1,9 +1,10 @@
-// autor: Leonardo Seiji Oyama
-// contato: leonardooyama@gmail.com
+// author: Leonardo Seiji Oyama
+// contact: leonardooyama@gmail.com
 
+// old definition of Pi constant
 #define PI 3.1415926535897932384626433832795
 
-//XPLM
+//XPLM libs
 #include "XPLMCamera.h"
 #include "XPLMDataAccess.h"
 #include "XPLMDefs.h"
@@ -17,14 +18,14 @@
 #include "XPLMScenery.h"
 #include "XPLMUtilities.h"
 
-//Widgets
+//Widgets libs
 #include "XPStandardWidgets.h"
 #include "XPUIGraphics.h"
 #include "XPWidgetDefs.h"
 #include "XPWidgets.h"
 #include "XPWidgetUtils.h"
 
-//Wrappers
+//Wrappers libs
 #include "XPCBroadcaster.h"
 #include "XPCDisplay.h"
 #include "XPCListener.h"
@@ -36,6 +37,7 @@
 #include <windows.h>
 #endif
 
+// Qt libs
 #include <QUdpSocket>
 #include <QDateTime>
 #include <QNetworkDatagram>
@@ -54,6 +56,7 @@
 // GeographicLib
 #include <GeographicLib/Geocentric.hpp>
 
+// enums to feed the Dead reckoning DIS function
 enum DeadReckoningModel
 {
     STATIC = 1,
@@ -67,7 +70,7 @@ enum DeadReckoningModel
     DRM_FVB,
 };
 
-
+// variables to read data from X-Plane
 XPLMDataRef DataRefFlightModelLat;
 XPLMDataRef DataRefFlightModelLon;
 XPLMDataRef DataRefFlightModelElev;
@@ -82,52 +85,44 @@ XPLMDataRef DataRefFlightModelLocalAx;
 XPLMDataRef DataRefFlightModelLocalAy;
 XPLMDataRef DataRefFlightModelLocalAz;
 
+// variables to build Entity State PDUs
 double flightModelLat, flightModelLon, flightModelElev;
 float flightModelTrueTheta, flightModelTruePhi, flightModelTruePsi, flightModelMagPsi;
 float flightModelLocalVx, flightModelLocalVy, flightModelLocalVz;
 float flightModelLocalAx, flightModelLocalAy, flightModelLocalAz;
-
 double geocentricX, geocentricY, geocentricZ;
 
-float FlightLoopSendUDPDatagram(float inElapsedSinceLastCall, float inElapsedTimeSinceLastFlightLoop, int inCounter, void *inRefcon);
 
+// variables to build the conversion matrix from X-Plane OGL coordinate system to Geocentric coordinate system
 double latOGLX, lonOGLX, elevOGLX, latOGLY, lonOGLY, elevOGLY, latOGLZ, lonOGLZ, elevOGLZ;
 double latOGL_zero, lonOGL_zero, elevOGL_zero;
 double latOGL_zero_old, lonOGL_zero_old, elevOGL_zero_old;
 double geocentricOGL_zeroX, geocentricOGL_zeroY, geocentricOGL_zeroZ;
 double geocentricOGLXX, geocentricOGLXY, geocentricOGLXZ, geocentricOGLYX, geocentricOGLYY, geocentricOGLYZ, geocentricOGLZX, geocentricOGLZY, geocentricOGLZZ;
-void updateCanonicConversionVectors();
-QVector<double> convertOGL2Geocentric(QVector<double> OGLVector);
 
-QString debugStr;
+// function to update the conversion matrix from X-Plane OGL coordinate system to Geocentric coordinate system
+void UpdateCanonicConversionVectors();
+// function to convert 3D vector from X-Plane OGL coordinate system to Geocentric coordinate system
+QVector<double> ConvertOGL2Geocentric(QVector<double> OGLVector);
 
+QString debugStr; // debug string
+
+QUdpSocket socketUDP; // UDP socket for sending data over the network
+
+// flight loop callback to send DIS PDUs
+float FlightLoopSendUDPDatagram(float inElapsedSinceLastCall, float inElapsedTimeSinceLastFlightLoop, int inCounter, void *inRefcon);
+
+// window id to interface inside X-Plane, not used yet
 XPLMWindowID	gWindow = NULL;
 
-QUdpSocket socketUDP;
+// function to handle window interface inside X-Plane, not used yet
+void MyDrawWindowCallback(XPLMWindowID inWindowID, void *inRefcon);
+// function to handle keybord interactions inside X-Plane, not used yet
+void MyHandleKeyCallback(XPLMWindowID inWindowID, char inKey, XPLMKeyFlags inFlags, char inVirtualKey, void * inRefcon, int losingFocus);
+// function to handle mouse interactions inside X-Plane, not used yet
+int MyHandleMouseClickCallback(XPLMWindowID inWindowID, int x, int y, XPLMMouseStatus inMouse, void * inRefcon);
 
-void MyDrawWindowCallback(
-        XPLMWindowID         inWindowID,
-        void *               inRefcon);
-
-void MyHandleKeyCallback(
-        XPLMWindowID         inWindowID,
-        char                 inKey,
-        XPLMKeyFlags         inFlags,
-        char                 inVirtualKey,
-        void *               inRefcon,
-        int                  losingFocus);
-
-int MyHandleMouseClickCallback(
-        XPLMWindowID         inWindowID,
-        int                  x,
-        int                  y,
-        XPLMMouseStatus      inMouse,
-        void *               inRefcon);
-
-PLUGIN_API int XPluginStart(
-        char *	outName,
-        char *	outSig,
-        char *	outDesc)
+PLUGIN_API int XPluginStart(char *	outName, char *	outSig, char *	outDesc)
 {
     strcpy(outName, "OpenDIS-XPlane");
     strcpy(outSig, "coter.OpenDIS-XPlane");
@@ -176,7 +171,7 @@ PLUGIN_API void XPluginReceiveMessage(
 
 float FlightLoopSendUDPDatagram(float inElapsedSinceLastCall, float inElapsedTimeSinceLastFlightLoop, int inCounter, void *inRefcon)
 {
-    updateCanonicConversionVectors();
+    UpdateCanonicConversionVectors();
 
     // update flight model variables with current data
     flightModelLat = XPLMGetDatad(DataRefFlightModelLat);
@@ -252,13 +247,10 @@ float FlightLoopSendUDPDatagram(float inElapsedSinceLastCall, float inElapsedTim
     linVel_OGL.push_back(flightModelLocalVy);
     linVel_OGL.push_back(flightModelLocalVz);
 
-
-
-    linVel_Geocentric  = convertOGL2Geocentric(linVel_OGL);
+    linVel_Geocentric  = ConvertOGL2Geocentric(linVel_OGL);
     linearVelocity.setX(linVel_Geocentric[0]);
     linearVelocity.setY(linVel_Geocentric[1]);
     linearVelocity.setZ(linVel_Geocentric[2]);
-
 
     friendly.setEntityLinearVelocity(linearVelocity);
 
@@ -272,7 +264,7 @@ float FlightLoopSendUDPDatagram(float inElapsedSinceLastCall, float inElapsedTim
     accel_OLG.push_back(flightModelLocalAx);
     accel_OLG.push_back(flightModelLocalAy);
     accel_OLG.push_back(flightModelLocalAz);
-    accel_Geocentric = convertOGL2Geocentric(accel_OLG);
+    accel_Geocentric = ConvertOGL2Geocentric(accel_OLG);
     acceleration.setX(accel_Geocentric[0]);
     acceleration.setY(accel_Geocentric[1]);
     acceleration.setZ(accel_Geocentric[2]);
@@ -293,10 +285,10 @@ float FlightLoopSendUDPDatagram(float inElapsedSinceLastCall, float inElapsedTim
 
     //return -10.0; // return in 10 flight loops
 
-    return 1.0; // return in 1 second
+    return 1.0; // return in 1 second, will send 1 PDU per second
 }
 
-void updateCanonicConversionVectors()
+void UpdateCanonicConversionVectors()
 {
     latOGL_zero_old = latOGL_zero;
     lonOGL_zero_old = lonOGL_zero;
@@ -343,9 +335,8 @@ void updateCanonicConversionVectors()
     socketUDP.writeDatagram(debugStr.toUtf8(), QHostAddress::Broadcast, 10000);
 }
 
-QVector<double> convertOGL2Geocentric(QVector<double> OGLVector)
+QVector<double> ConvertOGL2Geocentric(QVector<double> OGLVector)
 {
-    //updateCanonicConversionVectors();
     QVector<double> converted;
     double x ,y, z;
     if (OGLVector.size() !=3)
