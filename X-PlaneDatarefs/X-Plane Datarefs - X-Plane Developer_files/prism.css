@@ -1,0 +1,346 @@
+/* http://prismjs.com/download.html?themes=prism-okaidia&languages=markup+css+css-extras+clike+javascript+php+php-extras */
+/**
+ * okaidia theme for JavaScript, CSS and HTML
+ * Loosely based on Monokai textmate theme by http://www.monokai.nl/
+ * @author ocodia
+ */
+
+code[class*="language-"],
+pre[class*="language-"] {
+	color: #f8f8f2;
+	text-shadow: 0 1px rgba(0,0,0,0.3);
+	font-family: Consolas, Monaco, 'Andale Mono', monospace;
+	direction: ltr;
+	text-align: left;
+	white-space: pre;
+	word-spacing: normal;
+	word-break: normal;
+
+	-moz-tab-size: 4;
+	-o-tab-size: 4;
+	tab-size: 4;
+
+	-webkit-hyphens: none;
+	-moz-hyphens: none;
+	-ms-hyphens: none;
+	hyphens: none;
+}
+
+/* Code blocks */
+pre[class*="language-"] {
+	padding: 1em;
+	margin: .5em 0;
+	overflow: auto;
+	border-radius: 0.3em;
+}
+
+:not(pre) > code[class*="language-"],
+pre[class*="language-"] {
+	background: #272822;
+}
+
+/* Inline code */
+:not(pre) > code[class*="language-"] {
+	padding: .1em;
+	border-radius: .3em;
+}
+
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+	color: slategray;
+}
+
+.token.punctuation {
+	color: #f8f8f2;
+}
+
+.namespace {
+	opacity: .7;
+}
+
+.token.property,
+.token.tag,
+.token.constant,
+.token.symbol {
+	color: #f92672;
+}
+
+.token.boolean,
+.token.number{
+	color: #ae81ff;
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.builtin {
+	color: #a6e22e;
+}
+
+
+.token.operator,
+.token.url,
+.language-css .token.string,
+.style .token.string,
+.token.variable {
+	color: #f8f8f2;
+}
+
+.token.atrule,
+.token.attr-value
+{
+	color: #e6db74;
+}
+
+
+.token.keyword{
+color: #66d9ef;
+}
+.token.entity{
+	color: #fd971f;
+}
+.token.function{
+	color: #66d9ef;
+}
+
+.token.regex,
+.token.important {
+	color: #fd971f;
+}
+
+.token.important {
+	font-weight: bold;
+}
+
+.token.entity {
+	cursor: help;
+}
+
+
+
+/**
+ * prism.js Coy theme for JavaScript, CoffeeScript, CSS and HTML
+ * Based on https://github.com/tshedor/workshop-wp-theme (Example: http://workshop.kansan.com/category/sessions/basics or http://workshop.timshedor.com/category/sessions/basics);
+ * @author Tim  Shedor
+ */
+
+.std_docs code[class*="language-"],
+.std_docs pre[class*="language-"] {
+	color: black;
+	background: none;
+	font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+	text-align: left;
+	white-space: pre;
+	word-spacing: normal;
+	word-break: normal;
+	word-wrap: normal;
+	line-height: 1.5;
+
+	-moz-tab-size: 4;
+	-o-tab-size: 4;
+	tab-size: 4;
+
+	-webkit-hyphens: none;
+	-moz-hyphens: none;
+	-ms-hyphens: none;
+	hyphens: none;
+}
+
+/* Code blocks */
+.std_docs pre[class*="language-"] {
+	position: relative;
+	margin: .5em 0;
+	box-shadow: -1px 0px 0px 0px #358ccb, 0px 0px 0px 1px #dfdfdf;
+	border-left: 10px solid #358ccb;
+	background-color: #fdfdfd;
+	/*background-image: linear-gradient(transparent 50%, rgba(69, 142, 209, 0.04) 50%);*/
+	background-size: 3em 3em;
+	background-origin: content-box;
+	overflow: visible;
+	padding: 0 0 0 0.5em;
+	text-shadow: none !important;
+}
+
+.std_docs code[class*="language"] {
+	max-height: inherit;
+	height: 100%;
+	padding: 0 1em;
+	display: block;
+	overflow: auto;
+	text-shadow: none !important;
+}
+
+/* Margin bottom to accomodate shadow */
+.std_docs :not(pre) > code[class*="language-"],
+.std_docs pre[class*="language-"] {
+	background-color: #fdfdfd;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+	margin-bottom: 1em;
+}
+
+/* Inline code */
+.std_docs :not(pre) > code[class*="language-"] {
+	position: relative;
+	padding: .2em;
+	border-radius: 0.3em;
+	color: #c92c2c;
+	border: 1px solid rgba(0, 0, 0, 0.1);
+	display: inline;
+	white-space: normal;
+}
+
+.std_docs pre[class*="language-"]:before,
+.std_docs pre[class*="language-"]:after {
+	content: '';
+	z-index: -2;
+	display: block;
+	position: absolute;
+	bottom: 0.75em;
+	left: 0.18em;
+	width: 40%;
+	height: 20%;
+	max-height: 13em;
+	box-shadow: 0px 13px 8px #979797;
+	-webkit-transform: rotate(-2deg);
+	-moz-transform: rotate(-2deg);
+	-ms-transform: rotate(-2deg);
+	-o-transform: rotate(-2deg);
+	transform: rotate(-2deg);
+}
+
+.std_docs :not(pre) > code[class*="language-"]:after,
+.std_docs pre[class*="language-"]:after {
+	right: 0.75em;
+	left: auto;
+	-webkit-transform: rotate(2deg);
+	-moz-transform: rotate(2deg);
+	-ms-transform: rotate(2deg);
+	-o-transform: rotate(2deg);
+	transform: rotate(2deg);
+}
+
+.std_docs .token.comment,
+.std_docs .token.block-comment,
+.std_docs .token.prolog,
+.std_docs .token.doctype,
+.std_docs .token.cdata {
+	color: #7D8B99;
+}
+
+.std_docs .token.punctuation {
+	color: #5F6364;
+}
+
+.std_docs .token.property,
+.std_docs .token.tag,
+.std_docs .token.boolean,
+.std_docs .token.number,
+.std_docs .token.function-name,
+.std_docs .token.constant,
+.std_docs .token.symbol,
+.std_docs .token.deleted {
+	color: #c92c2c;
+}
+
+.std_docs .token.selector,
+.std_docs .token.attr-name,
+.std_docs .token.string,
+.std_docs .token.char,
+.std_docs .token.function,
+.std_docs .token.builtin,
+.std_docs .token.inserted {
+	color: #2f9c0a;
+}
+
+.std_docs .token.operator,
+.std_docs .token.entity,
+.std_docs .token.url,
+.std_docs .token.variable {
+	color: #a67f59;
+	background: rgba(255, 255, 255, 0.5);
+}
+
+.std_docs .token.atrule,
+.std_docs .token.attr-value,
+.std_docs .token.keyword,
+.std_docs .token.class-name {
+	color: #1990b8;
+}
+
+.std_docs .token.regex,
+.std_docs .token.important {
+	color: #e90;
+}
+
+.std_docs .language-css .token.string,
+.std_docs .style .token.string {
+	color: #a67f59;
+	background: rgba(255, 255, 255, 0.5);
+}
+
+.std_docs .token.important {
+	font-weight: normal;
+}
+
+.std_docs .token.bold {
+	font-weight: bold;
+}
+.std_docs .token.italic {
+	font-style: italic;
+}
+
+.std_docs .token.entity {
+	cursor: help;
+}
+
+.std_docs .namespace {
+	opacity: .7;
+}
+
+@media screen and (max-width: 767px) {
+	.std_docs pre[class*="language-"]:before,
+	.std_docs pre[class*="language-"]:after {
+		bottom: 14px;
+		box-shadow: none;
+	}
+
+}
+
+/* Plugin styles */
+.std_docs .token.tab:not(:empty):before,
+.std_docs .token.cr:before,
+.std_docs .token.lf:before {
+	color: #e0d7d1;
+}
+
+/* Plugin styles: Line Numbers */
+.std_docs pre[class*="language-"].line-numbers {
+	padding-left: 0;
+}
+
+.std_docs pre[class*="language-"].line-numbers code {
+	padding-left: 3.8em;
+}
+
+.std_docs pre[class*="language-"].line-numbers .line-numbers-rows {
+	left: 0;
+}
+
+/* Plugin styles: Line Highlight */
+.std_docs pre[class*="language-"][data-line] {
+	padding-top: 0;
+	padding-bottom: 0;
+	padding-left: 0;
+}
+.std_docs pre[data-line] code {
+	position: relative;
+	padding-left: 4em;
+}
+.std_docs pre .line-highlight {
+	margin-top: 0;
+}
+

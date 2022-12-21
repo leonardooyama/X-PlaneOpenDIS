@@ -74,10 +74,13 @@ enum DeadReckoningModel
 XPLMDataRef DataRefFlightModelLat;
 XPLMDataRef DataRefFlightModelLon;
 XPLMDataRef DataRefFlightModelElev;
+XPLMDataRef DataRefFlightModelTheta; // rotation around the Y axis
+XPLMDataRef DataRefFlightModelPhi; // rotation around the X axis
+XPLMDataRef DataRefFlightModelPsi; // rotation around Z axis
 XPLMDataRef DataRefFlightModelTrueTheta;
 XPLMDataRef DataRefFlightModelTruePhi;
 XPLMDataRef DataRefFlightModelTruePsi;
-XPLMDataRef DataRefFlightModelMagPsi;
+XPLMDataRef DataRefFlightModelMag_Psi;
 XPLMDataRef DataRefFlightModelLocalVx;
 XPLMDataRef DataRefFlightModelLocalVy;
 XPLMDataRef DataRefFlightModelLocalVz;
@@ -87,7 +90,9 @@ XPLMDataRef DataRefFlightModelLocalAz;
 
 // variables to build Entity State PDUs
 double flightModelLat, flightModelLon, flightModelElev;
-float flightModelTrueTheta, flightModelTruePhi, flightModelTruePsi, flightModelMagPsi;
+float flightModelTheta, flightModelPhi, flightModelPsi;
+float flightModelTheta_rad, flightModelPhi_rad, flightModelPsi_rad;
+float flightModelTrueTheta, flightModelTruePhi, flightModelTruePsi, flightModelMag_Psi;
 float flightModelLocalVx, flightModelLocalVy, flightModelLocalVz;
 float flightModelLocalAx, flightModelLocalAy, flightModelLocalAz;
 double geocentricX, geocentricY, geocentricZ;
@@ -105,7 +110,11 @@ void UpdateCanonicConversionVectors();
 // function to convert 3D vector from X-Plane OGL coordinate system to Geocentric coordinate system
 QVector<double> ConvertOGL2Geocentric(QVector<double> OGLVector);
 
-QString debugStr; // debug string
+void DebugToXPlaneLog(QString debugString);
+
+std::string pluginName = "OpenDIS-XPlane";
+std::string pluginSignature = "coter.OpenDIS-XPlane";
+std::string pluginDescription = "A plugin that implements some of the Open DIS functionalities in X-Plane.";
 
 QUdpSocket socketUDP; // UDP socket for sending data over the network
 
@@ -124,9 +133,9 @@ int MyHandleMouseClickCallback(XPLMWindowID inWindowID, int x, int y, XPLMMouseS
 
 PLUGIN_API int XPluginStart(char *	outName, char *	outSig, char *	outDesc)
 {
-    strcpy(outName, "OpenDIS-XPlane");
-    strcpy(outSig, "coter.OpenDIS-XPlane");
-    strcpy(outDesc, "A plugin that implements some of the Open DIS functionalities in X-Plane.");
+    strcpy_s(outName, pluginName.size() + 1 , pluginName.c_str());
+    strcpy_s(outSig, pluginSignature.size() + 1, pluginSignature.c_str());
+    strcpy_s(outDesc, pluginDescription.size() + 1, pluginDescription.c_str());
 
     XPLMRegisterFlightLoopCallback(FlightLoopSendUDPDatagram, xplm_FlightLoop_Phase_AfterFlightModel, NULL);
 
@@ -136,14 +145,16 @@ PLUGIN_API int XPluginStart(char *	outName, char *	outSig, char *	outDesc)
     DataRefFlightModelTrueTheta = XPLMFindDataRef("sim/flightmodel/position/true_theta");
     DataRefFlightModelTruePhi = XPLMFindDataRef("sim/flightmodel/position/true_phi");
     DataRefFlightModelTruePsi = XPLMFindDataRef("sim/flightmodel/position/true_psi");
-    DataRefFlightModelMagPsi = XPLMFindDataRef("sim/flightmodel/position/mag_psi");
+    DataRefFlightModelTheta = XPLMFindDataRef("sim/flightmodel/position/theta");
+    DataRefFlightModelPhi = XPLMFindDataRef("sim/flightmodel/position/phi");
+    DataRefFlightModelPsi = XPLMFindDataRef("sim/flightmodel/position/psi");
+    DataRefFlightModelMag_Psi = XPLMFindDataRef("sim/flightmodel/position/mag_psi");
     DataRefFlightModelLocalVx = XPLMFindDataRef("sim/flightmodel/position/local_vx");
     DataRefFlightModelLocalVy = XPLMFindDataRef("sim/flightmodel/position/local_vy");
     DataRefFlightModelLocalVz = XPLMFindDataRef("sim/flightmodel/position/local_vz");
     DataRefFlightModelLocalAx = XPLMFindDataRef("sim/flightmodel/position/local_ax");
     DataRefFlightModelLocalAy = XPLMFindDataRef("sim/flightmodel/position/local_ay");
     DataRefFlightModelLocalAz = XPLMFindDataRef("sim/flightmodel/position/local_az");
-
     return 1;
 }
 
@@ -178,10 +189,17 @@ float FlightLoopSendUDPDatagram(float inElapsedSinceLastCall, float inElapsedTim
     flightModelLon = XPLMGetDatad(DataRefFlightModelLon);
     flightModelElev = XPLMGetDatad(DataRefFlightModelElev);
 
+    flightModelTheta = XPLMGetDataf(DataRefFlightModelTheta);
+    flightModelPhi = XPLMGetDataf(DataRefFlightModelPhi);
+    flightModelPsi = XPLMGetDataf(DataRefFlightModelPsi);
+    flightModelTheta_rad = (2 * PI * flightModelTheta) / 360; // convert from degree to rad
+    flightModelPhi_rad = (2 * PI * flightModelPhi) / 360; // convert from degree to rad
+    flightModelPsi_rad = (2 * PI * flightModelPsi) / 360; // convert from degree to rad
+
     flightModelTrueTheta = XPLMGetDataf(DataRefFlightModelTrueTheta);
     flightModelTruePhi = XPLMGetDataf(DataRefFlightModelTruePhi);
     flightModelTruePsi = XPLMGetDataf(DataRefFlightModelTruePsi);
-    flightModelMagPsi = XPLMGetDataf(DataRefFlightModelMagPsi);
+    flightModelMag_Psi = XPLMGetDataf(DataRefFlightModelMag_Psi);
 
     flightModelLocalVx = XPLMGetDataf(DataRefFlightModelLocalVx);
     flightModelLocalVy = XPLMGetDataf(DataRefFlightModelLocalVy);
@@ -234,19 +252,22 @@ float FlightLoopSendUDPDatagram(float inElapsedSinceLastCall, float inElapsedTim
 
     // Entity Orientation
     DIS::Orientation orientation;
-    orientation.setPhi(flightModelTruePhi);
-    orientation.setPsi(flightModelTruePsi);
-    orientation.setTheta(flightModelTrueTheta);
+    QVector<double> orientation_OGL, orientation_Geocentric;
+    orientation_OGL.push_back(flightModelPhi_rad); // rotation around X-Axis
+    orientation_OGL.push_back(flightModelTheta_rad); // rotation around Y-Axis
+    orientation_OGL.push_back(flightModelPsi_rad); // // rotation around Z-Axis
+    orientation_Geocentric  = ConvertOGL2Geocentric(orientation_OGL);
+    orientation.setPhi(orientation_Geocentric[0]);
+    orientation.setTheta(orientation_Geocentric[1]);
+    orientation.setPsi(orientation_Geocentric[2]);
     friendly.setEntityOrientation(orientation);
 
     // Entity linear speed
     DIS::Vector3Float linearVelocity;
     QVector<double> linVel_OGL, linVel_Geocentric;
-
     linVel_OGL.push_back(flightModelLocalVx);
     linVel_OGL.push_back(flightModelLocalVy);
     linVel_OGL.push_back(flightModelLocalVz);
-
     linVel_Geocentric  = ConvertOGL2Geocentric(linVel_OGL);
     linearVelocity.setX(linVel_Geocentric[0]);
     linearVelocity.setY(linVel_Geocentric[1]);
@@ -296,12 +317,11 @@ void UpdateCanonicConversionVectors()
     XPLMLocalToWorld(0,0,0, &latOGL_zero, &lonOGL_zero, &elevOGL_zero);
     if (latOGL_zero == latOGL_zero_old && lonOGL_zero == lonOGL_zero_old && elevOGL_zero == elevOGL_zero_old)
     {
-        debugStr.clear();
-        debugStr+= "The origin of the OGL coordinates has not changed. Update is not necessary.";
-        socketUDP.writeDatagram(debugStr.toUtf8(), QHostAddress::Broadcast, 10000);
+        QString debugStr;
+        debugStr = "The origin of the OGL coordinates has not changed. Update is not necessary.";
+        DebugToXPlaneLog(debugStr);
         return;
     }
-
     XPLMLocalToWorld(1,0,0, &latOGLX, &lonOGLX, &elevOGLX);
     XPLMLocalToWorld(0,1,0, &latOGLY, &lonOGLY, &elevOGLY);
     XPLMLocalToWorld(0,0,1, &latOGLZ, &lonOGLZ, &elevOGLZ);
@@ -321,8 +341,8 @@ void UpdateCanonicConversionVectors()
     geocentricOGLZY = geocentricOGLZY - geocentricOGL_zeroY;
     geocentricOGLZZ = geocentricOGLZZ - geocentricOGL_zeroZ;
 
-    debugStr.clear();
-    debugStr+= "matrix = ";
+    QString debugStr;
+    debugStr = "\nmatrix = \n";
     debugStr+= QString::number(geocentricOGLXX, 'f', 6) + " ";
     debugStr+= QString::number(geocentricOGLXY, 'f', 6) + " ";
     debugStr+= QString::number(geocentricOGLXZ, 'f', 6) + "\n";
@@ -332,7 +352,7 @@ void UpdateCanonicConversionVectors()
     debugStr+= QString::number(geocentricOGLZX, 'f', 6) + " ";
     debugStr+= QString::number(geocentricOGLZY, 'f', 6) + " ";
     debugStr+= QString::number(geocentricOGLZZ, 'f', 6) + "\n";
-    socketUDP.writeDatagram(debugStr.toUtf8(), QHostAddress::Broadcast, 10000);
+    DebugToXPlaneLog(debugStr);
 }
 
 QVector<double> ConvertOGL2Geocentric(QVector<double> OGLVector)
@@ -352,9 +372,17 @@ QVector<double> ConvertOGL2Geocentric(QVector<double> OGLVector)
     x = OGLVector[0]* geocentricOGLXX + OGLVector[1]* geocentricOGLXY + OGLVector[2]* geocentricOGLXZ;
     y = OGLVector[0]* geocentricOGLYX + OGLVector[1]* geocentricOGLYY + OGLVector[2]* geocentricOGLYZ;
     z = OGLVector[0]* geocentricOGLZX + OGLVector[1]* geocentricOGLZY + OGLVector[2]* geocentricOGLZZ;
-
     converted.push_back(x);
     converted.push_back(y);
     converted.push_back(z);
     return converted;
+}
+
+void DebugToXPlaneLog(QString debugString)
+{
+    QString dbg;
+    dbg = QDateTime::currentDateTime().toString("dd-MM-yyyy, hh'h' mm'min' ss's': ");
+    dbg+= "[" + QString::fromStdString(pluginSignature) + "]: ";
+    dbg+= debugString + "\n";
+    XPLMDebugString(dbg.toStdString().c_str());
 }
