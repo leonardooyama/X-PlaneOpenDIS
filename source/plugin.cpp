@@ -74,9 +74,10 @@ enum DeadReckoningModel
 XPLMDataRef DataRefFlightModelLat;
 XPLMDataRef DataRefFlightModelLon;
 XPLMDataRef DataRefFlightModelElev;
-XPLMDataRef DataRefFlightModelTheta; // rotation around the Y axis
-XPLMDataRef DataRefFlightModelPhi; // rotation around the X axis
-XPLMDataRef DataRefFlightModelPsi; // rotation around Z axis
+XPLMDataRef DataRefFlightModelTheta; // rotation around the Y axis, pitch
+XPLMDataRef DataRefFlightModelPhi; // rotation around the X axis, roll
+XPLMDataRef DataRefFlightModelPsi; // rotation around Z axis, heading
+XPLMDataRef DataRefFlightModelq; // orientation quaternion
 XPLMDataRef DataRefFlightModelTrueTheta;
 XPLMDataRef DataRefFlightModelTruePhi;
 XPLMDataRef DataRefFlightModelTruePsi;
@@ -90,6 +91,7 @@ XPLMDataRef DataRefFlightModelLocalAz;
 
 // variables to build Entity State PDUs
 double flightModelLat, flightModelLon, flightModelElev;
+float q[4];
 float flightModelTheta, flightModelPhi, flightModelPsi;
 float flightModelTheta_rad, flightModelPhi_rad, flightModelPsi_rad;
 float flightModelTrueTheta, flightModelTruePhi, flightModelTruePsi, flightModelMag_Psi;
@@ -142,6 +144,7 @@ PLUGIN_API int XPluginStart(char *	outName, char *	outSig, char *	outDesc)
     DataRefFlightModelLat = XPLMFindDataRef("sim/flightmodel/position/latitude");
     DataRefFlightModelLon = XPLMFindDataRef("sim/flightmodel/position/longitude");
     DataRefFlightModelElev = XPLMFindDataRef("sim/flightmodel/position/elevation");
+    DataRefFlightModelq = XPLMFindDataRef("sim/flightmodel/position/q");
     DataRefFlightModelTrueTheta = XPLMFindDataRef("sim/flightmodel/position/true_theta");
     DataRefFlightModelTruePhi = XPLMFindDataRef("sim/flightmodel/position/true_phi");
     DataRefFlightModelTruePsi = XPLMFindDataRef("sim/flightmodel/position/true_psi");
@@ -192,9 +195,26 @@ float FlightLoopSendUDPDatagram(float inElapsedSinceLastCall, float inElapsedTim
     flightModelTheta = XPLMGetDataf(DataRefFlightModelTheta);
     flightModelPhi = XPLMGetDataf(DataRefFlightModelPhi);
     flightModelPsi = XPLMGetDataf(DataRefFlightModelPsi);
-    flightModelTheta_rad = (2 * PI * flightModelTheta) / 360; // convert from degree to rad
-    flightModelPhi_rad = (2 * PI * flightModelPhi) / 360; // convert from degree to rad
-    flightModelPsi_rad = (2 * PI * flightModelPsi) / 360; // convert from degree to rad
+    flightModelTheta_rad = (2.0 * PI * flightModelTheta) / 360.0; // convert from degree to rad
+    flightModelPhi_rad = (2.0 * PI * flightModelPhi) / 360.0; // convert from degree to rad
+    flightModelPsi_rad = (2.0 * PI * flightModelPsi) / 360.0; // convert from degree to rad
+    XPLMGetDatavf(DataRefFlightModelq, q, 0, 4);
+    QString dbgStrg;
+//    dbgStrg = "Theta = " + QString::number(flightModelTheta, 'f', 6) + "; Theta rad = " + QString::number(flightModelTheta_rad, 'f', 6);
+//    DebugToXPlaneLog(dbgStrg);
+//    dbgStrg = "Phi = " + QString::number(flightModelPhi, 'f', 6) + "; Phi rad = " + QString::number(flightModelPhi_rad, 'f', 6);
+//    DebugToXPlaneLog(dbgStrg);
+//    dbgStrg = "Psi = " + QString::number(flightModelPsi, 'f', 6) + "; Psi rad = " + QString::number(flightModelPsi_rad, 'f', 6);
+//    DebugToXPlaneLog(dbgStrg);
+//    dbgStrg = "q = [" + QString::number(q[0], 'f', 6) + ", " + QString::number(q[1], 'f', 6) + ", " + QString::number(q[2], 'f', 6) + ", " + QString::number(q[3], 'f', 6) + "]";
+//    DebugToXPlaneLog(dbgStrg);
+
+//    dbgStrg = "True Theta = " + QString::number(flightModelTrueTheta, 'f', 6);
+//    DebugToXPlaneLog(dbgStrg);
+//    dbgStrg = "True Phi = " + QString::number(flightModelTruePhi, 'f', 6);
+//    DebugToXPlaneLog(dbgStrg);
+//    dbgStrg = "True Psi = " + QString::number(flightModelTruePsi, 'f', 6);
+//    DebugToXPlaneLog(dbgStrg);
 
     flightModelTrueTheta = XPLMGetDataf(DataRefFlightModelTrueTheta);
     flightModelTruePhi = XPLMGetDataf(DataRefFlightModelTruePhi);
@@ -253,9 +273,11 @@ float FlightLoopSendUDPDatagram(float inElapsedSinceLastCall, float inElapsedTim
     // Entity Orientation
     DIS::Orientation orientation;
     QVector<double> orientation_OGL, orientation_Geocentric;
+    orientation_OGL.clear();
     orientation_OGL.push_back(flightModelPhi_rad); // rotation around X-Axis
     orientation_OGL.push_back(flightModelTheta_rad); // rotation around Y-Axis
-    orientation_OGL.push_back(flightModelPsi_rad); // // rotation around Z-Axis
+    orientation_OGL.push_back(flightModelPsi_rad); // rotation around Z-Axis
+
     orientation_Geocentric  = ConvertOGL2Geocentric(orientation_OGL);
     orientation.setPhi(orientation_Geocentric[0]);
     orientation.setTheta(orientation_Geocentric[1]);
@@ -265,6 +287,7 @@ float FlightLoopSendUDPDatagram(float inElapsedSinceLastCall, float inElapsedTim
     // Entity linear speed
     DIS::Vector3Float linearVelocity;
     QVector<double> linVel_OGL, linVel_Geocentric;
+    linVel_OGL.clear();
     linVel_OGL.push_back(flightModelLocalVx);
     linVel_OGL.push_back(flightModelLocalVy);
     linVel_OGL.push_back(flightModelLocalVz);
@@ -282,6 +305,7 @@ float FlightLoopSendUDPDatagram(float inElapsedSinceLastCall, float inElapsedTim
     // Entity acceleration
     DIS::Vector3Float acceleration;
     QVector<double> accel_OLG, accel_Geocentric;
+    accel_OLG.clear();
     accel_OLG.push_back(flightModelLocalAx);
     accel_OLG.push_back(flightModelLocalAy);
     accel_OLG.push_back(flightModelLocalAz);
@@ -304,9 +328,9 @@ float FlightLoopSendUDPDatagram(float inElapsedSinceLastCall, float inElapsedTim
     dataToSend.clear();
     buffer.clear();
 
-    //return -10.0; // return in 10 flight loops
+    return -10.0; // return in 10 flight loops
 
-    return 1.0; // return in 1 second, will send 1 PDU per second
+    //return 1.0; // return in 1 second, will send 1 PDU per second
 }
 
 void UpdateCanonicConversionVectors()
@@ -322,27 +346,62 @@ void UpdateCanonicConversionVectors()
         DebugToXPlaneLog(debugStr);
         return;
     }
+
     XPLMLocalToWorld(1,0,0, &latOGLX, &lonOGLX, &elevOGLX);
     XPLMLocalToWorld(0,1,0, &latOGLY, &lonOGLY, &elevOGLY);
     XPLMLocalToWorld(0,0,1, &latOGLZ, &lonOGLZ, &elevOGLZ);
 
     GeographicLib::Geocentric earth(GeographicLib::Constants::WGS84_a(), GeographicLib::Constants::WGS84_f());
+
     earth.Forward(latOGL_zero, lonOGL_zero, elevOGL_zero, geocentricOGL_zeroX, geocentricOGL_zeroY, geocentricOGL_zeroZ);
+
     earth.Forward(latOGLX, lonOGLX, elevOGLX, geocentricOGLXX, geocentricOGLXY, geocentricOGLXZ);
     earth.Forward(latOGLY, lonOGLY, elevOGLY, geocentricOGLYX, geocentricOGLYY, geocentricOGLYZ);
     earth.Forward(latOGLZ, lonOGLZ, elevOGLZ, geocentricOGLZX, geocentricOGLZY, geocentricOGLZZ);
+
     geocentricOGLXX = geocentricOGLXX - geocentricOGL_zeroX;
     geocentricOGLXY = geocentricOGLXY - geocentricOGL_zeroY;
     geocentricOGLXZ = geocentricOGLXZ - geocentricOGL_zeroZ;
+
     geocentricOGLYX = geocentricOGLYX - geocentricOGL_zeroX;
     geocentricOGLYY = geocentricOGLYY - geocentricOGL_zeroY;
     geocentricOGLYZ = geocentricOGLYZ - geocentricOGL_zeroZ;
+
     geocentricOGLZX = geocentricOGLZX - geocentricOGL_zeroX;
     geocentricOGLZY = geocentricOGLZY - geocentricOGL_zeroY;
     geocentricOGLZZ = geocentricOGLZZ - geocentricOGL_zeroZ;
 
+    double normGeocentricOGLX, normGeocentricOGLY, normGeocentricOGLZ;
+    normGeocentricOGLX = sqrt(pow(geocentricOGLXX,2) + pow(geocentricOGLXY,2) + pow(geocentricOGLXZ,2));
+    normGeocentricOGLY = sqrt(pow(geocentricOGLYX,2) + pow(geocentricOGLYY,2) + pow(geocentricOGLYZ,2));
+    normGeocentricOGLZ = sqrt(pow(geocentricOGLZX,2) + pow(geocentricOGLZY,2) + pow(geocentricOGLZZ,2));
+
     QString debugStr;
     debugStr = "\nmatrix = \n";
+    debugStr+= QString::number(geocentricOGLXX, 'f', 6) + " ";
+    debugStr+= QString::number(geocentricOGLXY, 'f', 6) + " ";
+    debugStr+= QString::number(geocentricOGLXZ, 'f', 6) + "\n";
+    debugStr+= QString::number(geocentricOGLYX, 'f', 6) + " ";
+    debugStr+= QString::number(geocentricOGLYY, 'f', 6) + " ";
+    debugStr+= QString::number(geocentricOGLYZ, 'f', 6) + "\n";
+    debugStr+= QString::number(geocentricOGLZX, 'f', 6) + " ";
+    debugStr+= QString::number(geocentricOGLZY, 'f', 6) + " ";
+    debugStr+= QString::number(geocentricOGLZZ, 'f', 6) + "\n";
+    DebugToXPlaneLog(debugStr);
+
+    geocentricOGLXX = geocentricOGLXX/normGeocentricOGLX;
+    geocentricOGLXY = geocentricOGLXY/normGeocentricOGLX;
+    geocentricOGLXZ = geocentricOGLXZ/normGeocentricOGLX;
+
+    geocentricOGLYX = geocentricOGLYX/normGeocentricOGLY;
+    geocentricOGLYY = geocentricOGLYY/normGeocentricOGLY;
+    geocentricOGLYZ = geocentricOGLYZ/normGeocentricOGLY;
+
+    geocentricOGLZX = geocentricOGLZX/normGeocentricOGLZ;
+    geocentricOGLZY = geocentricOGLZY/normGeocentricOGLZ;
+    geocentricOGLZZ = geocentricOGLZZ/normGeocentricOGLZ;
+
+    debugStr = "\nnormalized matrix = \n";
     debugStr+= QString::number(geocentricOGLXX, 'f', 6) + " ";
     debugStr+= QString::number(geocentricOGLXY, 'f', 6) + " ";
     debugStr+= QString::number(geocentricOGLXZ, 'f', 6) + "\n";
